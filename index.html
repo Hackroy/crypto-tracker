@@ -1,0 +1,49 @@
+cat > index.html << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crypto Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Segoe UI,Arial,sans-serif;background:#0b1220;color:#e5e7eb;min-height:100vh}
+header{text-align:center;padding:60px 20px 30px}
+h1{font-size:2.4rem;background:linear-gradient(90deg,#38bdf8,#a78bfa);-webkit-background-clip:text;color:transparent}
+p.sub{margin-top:10px;color:#94a3b8}
+.grid{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;padding:20px}
+.card{background:#111a2e;border:1px solid #1f2a44;border-radius:16px;padding:28px;width:260px;text-align:center}
+.card h2{font-size:1.1rem;color:#94a3b8}
+.price{font-size:1.8rem;margin:12px 0;font-weight:700}
+.up{color:#22c55e}.down{color:#ef4444}
+footer{text-align:center;padding:40px 20px;color:#64748b;font-size:.9rem}
+.badge{display:inline-block;margin:4px;padding:4px 12px;border:1px solid #334155;border-radius:20px}
+</style>
+</head>
+<body>
+<header>
+<h1>Crypto Tracker</h1>
+<p class="sub">Live prices, running in a Docker container on AWS</p>
+</header>
+<div class="grid" id="grid"><p class="sub">Loading prices...</p></div>
+<footer>
+<span class="badge">Docker</span><span class="badge">Amazon ECR</span><span class="badge">Amazon ECS</span>
+<p style="margin-top:14px">Built by Narayan Kushwaha</p>
+</footer>
+<script>
+const coins={bitcoin:"Bitcoin (BTC)",ethereum:"Ethereum (ETH)",solana:"Solana (SOL)"};
+async function load(){
+ try{
+  const r=await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true");
+  const d=await r.json();
+  document.getElementById("grid").innerHTML=Object.keys(coins).map(id=>{
+   const c=d[id].usd_24h_change;
+   return `<div class="card"><h2>${coins[id]}</h2><div class="price">$${d[id].usd.toLocaleString()}</div><div class="${c>=0?'up':'down'}">${c>=0?'▲':'▼'} ${c.toFixed(2)}% (24h)</div></div>`;
+  }).join("");
+ }catch(e){document.getElementById("grid").innerHTML='<p class="sub">Prices unavailable right now.</p>';}
+}
+load();setInterval(load,60000);
+</script>
+</body>
+</html>
+EOF
